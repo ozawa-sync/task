@@ -3,35 +3,42 @@ import mysql.connector as mydb
 
 app = Flask(__name__)
 
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-@app.route('/get_data', methods=['POST'])
-def get_data():
-    # コネクションの作成
-    conn = mydb.connect(
+def get_db_connection():
+    return mydb.connect(
         host='localhost',
         port='3306',
         user='testuser',
         password='testpass',
         database='test'
     )
-    
-    # DB操作用にカーソルを作成
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/get_data', methods=['POST'])
+def get_data():
+    conn = get_db_connection()
     cur = conn.cursor()
-    
-    # SQL文
     cur.execute("SELECT * FROM fluits2")
-    
     rows = cur.fetchall()
-    
-    # データベース接続を閉じる
     cur.close()
     conn.close()
-    
-    # 取得したデータを表示
     return render_template('data.html', rows=rows)
+
+@app.route('/save_data', methods=['POST'])
+def save_data():
+    num1 = request.form['num1']
+    text = request.form['text']
+    num2 = request.form['num2']
+    num3 = request.form['num3']
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("INSERT INTO fluits2 (id, name, price, stock) VALUES (%s, %s, %s, %s)", (num1, text, num2, num3))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return get_data()
 
 if __name__ == '__main__':
     app.run(debug=True)
