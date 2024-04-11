@@ -1,24 +1,27 @@
-from flask import Flask, render_template, request, redirect, url_for
-from flask_sqlalchemy import SQLAlchemy
-import os
+import mysql.connector as mydb
 
-app = Flask(__name__)
-app.config['SECRET_KEY'] = 'secret_key'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///todo.sqlite'
+# コネクションの作成
+conn = mydb.connect(
+    host='localhost',
+    port='3306',
+    user='testuser',
+    password='testpass',
+    database='test'
+)
 
-db = SQLAlchemy(app)
-class Task(db.Model):
+# コネクションが切れた時に再接続してくれるよう設定します。
+conn.ping(reconnect=True)
 
-    __tablename__ = "tasks"
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    text = db.Column(db.Text())
-    status = db.Column(db.Integer)
+# 接続できているかどうか確認
+print(conn.is_connected())
 
-db.create_all()
+# DB操作用にカーソルを作成
+cur = conn.cursor()
 
-@app.route('/')
-def index():
-    tasks = Task.query.all()
-    return render_template("index.html", tasks = tasks)
+# SQL文
+cur.execute("SELECT * FROM fluits2")
 
-app.run(debug=True, host=os.getenv('APP_ADDRESS', 'localhost'), port=8001)
+rows = cur.fetchall()
+
+for row in rows:
+    print(row)
